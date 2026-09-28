@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tasdik Trading Demo</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #0b1220;
+  color: white;
+}
+
+header {
+  background: #111c31;
+  padding: 18px;
+  text-align: center;
+  border-bottom: 1px solid #26344f;
+}
+
+header h1 {
+  color: #00e676;
+}
+
+header p {
+  color: #9aa7bd;
+  margin-top: 5px;
+}
+
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 15px;
+}
+
+.balance {
+  background: #111c31;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+.balance small {
+  color: #9aa7bd;
+}
+
+.balance h2 {
+  margin-top: 7px;
+  color: #00e676;
+}
+
+.card {
+  background: #111c31;
+  padding: 17px;
+  border-radius: 15px;
+  margin-bottom: 12px;
+}
+
+.stock-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stock-name {
+  font-size: 19px;
+  font-weight: bold;
+}
+
+.price {
+  font-size: 18px;
+  margin-top: 8px;
+}
+
+.change {
+  color: #00e676;
+  margin-top: 4px;
+}
+
+button {
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  margin-top: 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.buy {
+  background: #00e676;
+  color: #001b0c;
+}
+
+.sell {
+  background: #ff5252;
+  color: white;
+  margin-left: 6px;
+}
+
+.section-title {
+  margin: 20px 0 10px;
+}
+
+.holding {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #26344f;
+}
+
+.empty {
+  color: #9aa7bd;
+  padding: 10px 0;
+}
+
+#message {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #26344f;
+  padding: 12px 20px;
+  border-radius: 10px;
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📈 TASDIK TRADING</h1>
+  <p>Paper Trading Demo • Virtual Money</p>
+</header>
+
+<div class="container">
+
+  <div class="balance">
+    <small>Available Balance</small>
+    <h2 id="balance">₹10,000.00</h2>
+  </div>
+
+  <h2 class="section-title">Market</h2>
+  <div id="market"></div>
+
+  <h2 class="section-title">My Portfolio</h2>
+  <div class="card">
+    <div id="portfolio">
+      <div class="empty">No stocks purchased yet.</div>
+    </div>
+  </div>
+
+  <button onclick="resetGame()" style="background:#26344f;color:white;width:100%;">
+    Reset Demo
+  </button>
+
+</div>
+
+<div id="message"></div>
+
+<script>
+
+let balance = 10000;
+
+let stocks = [
+  { name: "TASDIK TECH", symbol: "TST", price: 250 },
+  { name: "INDIA GAMING", symbol: "IGM", price: 180 },
+  { name: "DIGITAL INDIA", symbol: "DGI", price: 320 },
+  { name: "FUTURE MOTORS", symbol: "FTM", price: 450 },
+  { name: "SMART BANK", symbol: "SMB", price: 520 }
+];
+
+let portfolio = {};
+
+function money(value) {
+  return "₹" + value.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function showMessage(text) {
+  const msg = document.getElementById("message");
+  msg.innerText = text;
+  msg.style.display = "block";
+
+  setTimeout(() => {
+    msg.style.display = "none";
+  }, 1800);
+}
+
+function renderMarket() {
+
+  const market = document.getElementById("market");
+  market.innerHTML = "";
+
+  stocks.forEach((stock, index) => {
+
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.innerHTML = `
+      <div class="stock-top">
+        <div>
+          <div class="stock-name">${stock.name}</div>
+          <small>${stock.symbol}</small>
+        </div>
+
+        <div>
+          <div class="price">${money(stock.price)}</div>
+          <div class="change">Market Demo</div>
+        </div>
+      </div>
+
+      <button class="buy" onclick="buyStock(${index})">
+        Buy 1
+      </button>
+
+      <button class="sell" onclick="sellStock(${index})">
+        Sell 1
+      </button>
+    `;
+
+    market.appendChild(card);
+  });
+}
+
+function buyStock(index) {
+
+  const stock = stocks[index];
+
+  if (balance < stock.price) {
+    showMessage("❌ Not enough virtual money");
+    return;
+  }
+
+  balance -= stock.price;
+
+  if (!portfolio[stock.symbol]) {
+    portfolio[stock.symbol] = {
+      name: stock.name,
+      quantity: 0,
+      invested: 0
+    };
+  }
+
+  portfolio[stock.symbol].quantity++;
+  portfolio[stock.symbol].invested += stock.price;
+
+  update();
+  showMessage("✅ Bought 1 " + stock.symbol);
+}
+
+function sellStock(index) {
+
+  const stock = stocks[index];
+
+  if (!portfolio[stock.symbol] ||
+      portfolio[stock.symbol].quantity <= 0) {
+
+    showMessage("❌ You don't own this stock");
+    return;
+  }
+
+  balance += stock.price;
+
+  portfolio[stock.symbol].quantity--;
+
+  if (portfolio[stock.symbol].quantity === 0) {
+    delete portfolio[stock.symbol];
+  }
+
+  update();
+  showMessage("💰 Sold 1 " + stock.symbol);
+}
+
+function renderPortfolio() {
+
+  const area = document.getElementById("portfolio");
+
+  const keys = Object.keys(portfolio);
+
+  if (keys.length === 0) {
+    area.innerHTML =
+      '<div class="empty">No stocks purchased yet.</div>';
+    return;
+  }
+
+  area.innerHTML = "";
+
+  keys.forEach(symbol => {
+
+    const item = portfolio[symbol];
+
+    const stock = stocks.find(
+      s => s.symbol === symbol
+    );
+
+    const currentValue =
+      item.quantity * stock.price;
+
+    const profit =
+      currentValue - item.invested;
+
+    const div = document.createElement("div");
+    div.className = "holding";
+
+    div.innerHTML = `
+      <div>
+        <b>${item.name}</b><br>
+        <small>${item.quantity} share(s)</small>
+      </div>
+
+      <div style="text-align:right">
+        <b>${money(currentValue)}</b><br>
+        <small style="color:${profit >= 0 ? '#00e676' : '#ff5252'}">
+          ${profit >= 0 ? '+' : ''}${money(profit)}
+        </small>
+      </div>
+    `;
+
+    area.appendChild(div);
+  });
+}
+
+function update() {
+
+  document.getElementById("balance").innerText =
+    money(balance);
+
+  renderMarket();
+  renderPortfolio();
+}
+
+function simulateMarket() {
+
+  stocks.forEach(stock => {
+
+    const movement =
+      (Math.random() - 0.5) * 10;
+
+    stock.price += movement;
+
+    if (stock.price < 10) {
+      stock.price = 10;
+    }
+
+    stock.price =
+      Math.round(stock.price * 100) / 100;
+  });
+
+  update();
+}
+
+function resetGame() {
+
+  if (!confirm("Reset your demo account?")) {
+    return;
+  }
+
+  balance = 10000;
+  portfolio = {};
+
+  stocks[0].price = 250;
+  stocks[1].price = 180;
+  stocks[2].price = 320;
+  stocks[3].price = 450;
+  stocks[4].price = 520;
+
+  update();
+
+  showMessage("🔄 Account reset to ₹10,000");
+}
+
+update();
+
+/* Simulated market movement */
+setInterval(simulateMarket, 3000);
+
+</script>
+
+</body>
+  </html>
